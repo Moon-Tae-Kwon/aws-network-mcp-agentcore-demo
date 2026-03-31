@@ -256,3 +256,49 @@ https://bedrock-agentcore.<REGION>.amazonaws.com/runtimes/<RUNTIME_ID>/invocatio
 ## License
 
 This project is for demonstration purposes.
+
+
+## 멀티 어카운트 설정
+
+Network MCP의 모든 tool은 `profile_name` 파라미터를 지원합니다. 다른 AWS 계정의 네트워크를 조회하려면 cross-account AssumeRole을 설정하세요.
+
+### 설정 방법
+
+**1. 대상 계정(Account B)에서 IAM Role 생성:**
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::<RUNTIME_B_ACCOUNT>:role/<RUNTIME_B_SERVICE_ROLE>"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+```
+
+권한: `ReadOnlyAccess` 또는 네트워크 최소 권한 정책 연결
+
+**2. Runtime B의 Service Role에 AssumeRole 권한 추가:**
+
+```json
+{
+    "Effect": "Allow",
+    "Action": "sts:AssumeRole",
+    "Resource": "arn:aws:iam::<ACCOUNT_B>:role/<CROSS_ACCOUNT_ROLE>"
+}
+```
+
+**3. Runtime B 컨테이너에 AWS CLI profile 설정:**
+
+Dockerfile에 추가:
+```dockerfile
+RUN mkdir -p /root/.aws
+RUN echo '[profile account-b]\nrole_arn = arn:aws:iam::<ACCOUNT_B>:role/<ROLE>\ncredential_source = EcsContainer' > /root/.aws/config
+```
+
+LLM이 자동으로 `profile_name="account-b"`를 사용하여 다른 계정의 리소스를 조회합니다.

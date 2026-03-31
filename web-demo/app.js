@@ -1,10 +1,8 @@
 const API = "https://p8krel4vi6.execute-api.us-east-1.amazonaws.com/prod";
 const FD = {
-  VPC_CONNECTIVITY: [{id:"account_id",l:"Account ID",v:"915370161469"},{id:"region",l:"Region",v:"us-east-1"},{id:"vpc_id",l:"VPC ID",v:"vpc-0298d05366b77ee14"}],
-  TGW_ROUTE_CHECK: [{id:"account_id",l:"Account ID",v:"915370161469"},{id:"region",l:"Region",v:"us-east-1"},{id:"tgw_route_table_id",l:"TGW ID",v:""}],
-  VPN_STATUS: [{id:"account_id",l:"Account ID",v:"915370161469"},{id:"region",l:"Region",v:"us-east-1"}],
-  SUBNET_CHECK: [{id:"account_id",l:"Account ID",v:"915370161469"},{id:"region",l:"Region",v:"us-east-1"},{id:"vpc_id",l:"VPC ID",v:"vpc-0298d05366b77ee14"}],
-  SECURITY_GROUP_AUDIT: [{id:"account_id",l:"Account ID",v:"915370161469"},{id:"region",l:"Region",v:"us-east-1"},{id:"vpc_id",l:"VPC ID",v:"vpc-0298d05366b77ee14"}]
+  CONNECTIVITY_REQUEST: [{id:"src_ip",l:"Source IP",v:""},{id:"dst_ip",l:"Destination IP",v:""},{id:"port",l:"Port",v:"443"},{id:"protocol",l:"Protocol",v:"TCP"},{id:"region",l:"Region",v:"us-east-1"}],
+  FIREWALL_CHECK: [{id:"src_ip",l:"Source IP",v:""},{id:"dst_ip",l:"Destination IP",v:""},{id:"port",l:"Port",v:"443"},{id:"region",l:"Region",v:"us-east-1"}],
+  INTERNET_ACCESS: [{id:"src_ip",l:"Target IP",v:""},{id:"region",l:"Region",v:"us-east-1"}]
 };
 let sel=null;
 function uf(){const t=document.getElementById("tType").value,c=document.getElementById("df");if(!t||!FD[t]){c.innerHTML="";return}c.innerHTML=FD[t].map(f=>`<label>${f.l}</label><input id="f_${f.id}" placeholder="${f.v}" value="${f.v}">`).join("")}

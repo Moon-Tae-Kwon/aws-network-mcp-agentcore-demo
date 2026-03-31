@@ -1,27 +1,62 @@
-import json
-import os
-import boto3
+import json, os, boto3, urllib.request
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
 from datetime import datetime
-import urllib.request
 
 ddb = boto3.resource("dynamodb")
 table = ddb.Table(os.environ["TABLE_NAME"])
 AGENT_ENDPOINT = os.environ.get("AGENT_ENDPOINT", "")
 
+IMPACT_SUFFIX = """
+
+마지막으로 반드시 다음 영향도 분석을 포함해주세요:
+- 이 요청을 처리할 경우 기존 트래픽에 미치는 영향
+- 변경 시 주의사항 및 위험 요소
+- 롤백 방안"""
+
 TICKET_PROMPTS = {
-    "VPC_CONNECTIVITY": "VPC {vpc_id} in region {region}의 네트워크 구성을 분석해주세요. 서브넷, 라우팅 테이블, IGW, NAT Gateway, NACL을 확인하고 인터넷 연결 가능 여부와 잠재적 문제점을 진단해주세요.",
-    "TGW_ROUTE_CHECK": "Region {region}의 Transit Gateway 라우팅을 분석해주세요. 라우트 테이블, 블랙홀 라우트, 비대칭 경로 등 문제가 없는지 확인해주세요.",
-    "VPN_STATUS": "Region {region}의 VPN 연결 상태를 확인해주세요. 터널 상태, BGP 세션, 연결 문제가 있는지 진단해주세요.",
-    "SUBNET_CHECK": "VPC {vpc_id} in region {region}의 서브넷 구성을 분석해주세요. 각 서브넷의 가용 IP, 라우팅, public/private 구분, AZ 분산을 확인해주세요.",
-    "SECURITY_GROUP_AUDIT": "VPC {vpc_id} in region {region}의 보안 그룹을 감사해주세요. 과도하게 열린 규칙, 0.0.0.0/0 인바운드 등 보안 위험을 식별해주세요.",
+    "CONNECTIVITY_REQUEST": """신규 네트워크 통신 요청입니다.
+소스: {src_ip} (region: {region})
+목적지: {dst_ip}
+포트: {port}
+프로토콜: {protocol}
+
+다음을 분석해주세요:
+1. 소스 IP와 목적지 IP가 각각 어떤 VPC/서브넷에 있는지 찾아주세요 (find_ip_address 사용)
+2. 두 IP 간 네트워크 경로를 추적해주세요 (라우트 테이블, TGW, 피어링 등)
+3. 현재 이 통신이 가능한 상태인지 판단해주세요
+4. 불가능하다면 어떤 리소스(라우트 테이블, 보안 그룹, NACL 등)를 수정해야 하는지 구체적으로 알려주세요""" + IMPACT_SUFFIX,
+
+    "FIREWALL_CHECK": """방화벽 정책 확인 요청입니다.
+소스: {src_ip}
+목적지: {dst_ip}
+포트: {port}
+리전: {region}
+
+다음을 분석해주세요:
+1. 소스와 목적지 IP의 위치를 찾아주세요
+2. 경로에 Network Firewall이 있는지 확인해주세요
+3. 방화벽 규칙에서 이 트래픽이 허용되는지 확인해주세요
+4. 차단된다면 어떤 규칙을 추가/수정해야 하는지 알려주세요""" + IMPACT_SUFFIX,
+
+    "INTERNET_ACCESS": """인터넷 접근 요청입니다.
+대상 IP: {src_ip}
+리전: {region}
+
+다음을 분석해주세요:
+1. 해당 IP가 위치한 VPC/서브넷을 찾아주세요
+2. 인터넷 접근 경로를 확인해주세요 (IGW, NAT Gateway, 라우팅)
+3. 보안 그룹과 NACL에서 아웃바운드 트래픽이 허용되는지 확인해주세요
+4. 인터넷 접근이 불가능하다면 필요한 작업을 알려주세요""" + IMPACT_SUFFIX,
 }
 
 def build_prompt(ticket):
     template = TICKET_PROMPTS.get(ticket["type"], "")
     fields = ticket.get("fields", {})
-    prompt = template.format(**fields) if template else f"Ticket: {ticket['type']}. Fields: {fields}. Analyze this network issue."
+    try:
+        prompt = template.format(**fields)
+    except KeyError:
+        prompt = f"Ticket: {ticket['type']}. Fields: {fields}. Analyze this network request."
     prompt += f"\n\nTicket ID: {ticket['id']}, Title: {ticket.get('title', '')}"
     return prompt
 
@@ -48,7 +83,6 @@ def lambda_handler(event, context):
         method = event["httpMethod"]
         path = event.get("path", "")
         path_params = event.get("pathParameters") or {}
-
         if method == "GET" and path == "/tickets":
             return respond(200, {"tickets": table.scan().get("Items", [])})
         if method == "POST" and path == "/tickets":

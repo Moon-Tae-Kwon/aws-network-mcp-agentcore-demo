@@ -100,7 +100,7 @@ select:focus,input:focus{border-color:var(--ac)}
 <div>
 <div class="pnl"><h2>📋 Create Ticket</h2>
 <label>Ticket Type</label>
-<select id="tType" onchange="uf()"><option value="">Select type...</option><option value="VPC_CONNECTIVITY">VPC Connectivity Check</option><option value="TGW_ROUTE_CHECK">Transit Gateway Route Check</option><option value="VPN_STATUS">VPN Status Check</option><option value="SUBNET_CHECK">Subnet Analysis</option><option value="SECURITY_GROUP_AUDIT">Security Group Audit</option></select>
+<select id="tType" onchange="uf()"><option value="">Select type...</option><option value="CONNECTIVITY_REQUEST">서버 간 통신 요청</option><option value="FIREWALL_CHECK">방화벽 정책 확인</option><option value="INTERNET_ACCESS">인터넷 접근 요청</option></select>
 <label>Title</label><input id="tTitle" placeholder="Brief description...">
 <div id="df"></div>
 <button class="btn btn-p" onclick="ct()">Create Ticket</button>
