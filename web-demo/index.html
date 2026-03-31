@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetOps - Network MCP Ticket System</title>
+<style>
+:root{--bg:#0f1117;--s1:#1a1d27;--s2:#242836;--bd:#2e3348;--t1:#e1e4ed;--t2:#8b90a5;--ac:#6c5ce7;--ac2:#a29bfe;--gr:#00b894;--rd:#ff6b6b;--or:#fdcb6e;--bl:#74b9ff}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
+.hdr{background:linear-gradient(135deg,var(--s1),var(--s2));border-bottom:1px solid var(--bd);padding:20px 32px;display:flex;align-items:center;gap:16px}
+.hdr .logo{font-size:24px;font-weight:700;color:var(--ac2)}.hdr .logo span{color:var(--t2);font-weight:400;font-size:14px;margin-left:8px}
+.hdr .badge{background:var(--ac);color:#fff;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600}
+.wrap{max-width:1400px;margin:0 auto;padding:24px;display:grid;grid-template-columns:380px 1fr;gap:24px}
+.pnl{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:24px}
+.pnl h2{font-size:16px;color:var(--t2);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+label{display:block;font-size:13px;color:var(--t2);margin:14px 0 6px}label:first-of-type{margin-top:0}
+select,input{width:100%;padding:10px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:14px;outline:none}
+select:focus,input:focus{border-color:var(--ac)}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:20px;transition:.2s}
+.btn-p{background:var(--ac);color:#fff}.btn-p:hover{background:var(--ac2)}
+.btn-g{background:var(--gr);color:#fff}.btn-g:hover{opacity:.9}
+.btn:disabled{opacity:.6;cursor:wait}
+.tlist{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.tc{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:14px;cursor:pointer;transition:.2s}
+.tc:hover{border-color:var(--ac)}.tc.act{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac)}
+.tc .th{display:flex;justify-content:space-between;align-items:center}
+.tc .tid{font-weight:600;color:var(--ac2);font-size:14px}
+.tc .tt{color:var(--t2);font-size:12px;margin-top:4px}
+.st{padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600}
+.st-OPEN{background:rgba(253,203,110,.15);color:var(--or)}
+.st-PROCESSING{background:rgba(116,185,255,.15);color:var(--bl)}
+.st-COMPLETED{background:rgba(0,184,148,.15);color:var(--gr)}
+.rpnl{min-height:400px;overflow-y:auto}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;color:var(--t2)}
+.empty .ic{font-size:48px;margin-bottom:12px;opacity:.5}
+.rs{margin-top:16px}.rs h3{font-size:13px;color:var(--t2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.rm{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mi{background:var(--s2);padding:10px 14px;border-radius:8px}
+.mi .ml{font-size:11px;color:var(--t2)}.mi .mv{font-size:14px;font-weight:600;margin-top:2px}
+.rj{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:16px;margin-top:12px;overflow:auto;max-height:400px}
+.rj pre{font-family:'SF Mono','Fira Code',monospace;font-size:12px;line-height:1.6;color:var(--t1);white-space:pre-wrap}
+.fl{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:12px 16px;background:var(--s2);border-radius:8px;font-size:12px;flex-wrap:wrap}
+.fs{padding:4px 10px;border-radius:6px;font-weight:600}.fa{color:var(--t2)}
+.f1{background:rgba(108,92,231,.2);color:var(--ac2)}.f2{background:rgba(253,203,110,.2);color:var(--or)}.f3{background:rgba(0,184,148,.2);color:var(--gr)}
+.card{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--ac2)}
+.card-title .mono{color:var(--t2);font-size:12px}
+.card-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:13px}
+.card-row:last-child{border-bottom:none}
+.card-row span:first-child{color:var(--t2)}
+.mono{font-family:'SF Mono','Fira Code',monospace;font-size:12px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:8px 10px;color:var(--t2);border-bottom:1px solid var(--bd);font-weight:600;font-size:11px;text-transform:uppercase}
+.tbl td{padding:8px 10px;border-bottom:1px solid rgba(46,51,72,.5)}
+.tbl tr:hover{background:rgba(108,92,231,.05)}
+.results-grid{display:flex;flex-direction:column;gap:4px}
+.rmap{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:20px;margin-bottom:12px}
+.rmap-vpc{padding:12px 16px;background:linear-gradient(135deg,rgba(108,92,231,.15),rgba(162,155,254,.1));border:1px solid var(--ac);border-radius:10px;margin-bottom:16px}
+.rmap-vpc-label{font-size:15px;font-weight:700;color:var(--ac2)}
+.rmap-vpc-cidr{font-size:12px;color:var(--t2);margin-top:4px;font-family:'SF Mono','Fira Code',monospace}
+.rmap-azs{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.rmap-az{flex:1;min-width:280px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:12px}
+.rmap-az-label{font-size:11px;font-weight:700;color:var(--or);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bd)}
+.rmap-subnet{background:var(--s1);border:1px solid var(--bd);border-radius:6px;padding:10px;margin-bottom:8px}
+.rmap-sub-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.rmap-sub-cidr{font-size:11px;color:var(--t2);font-family:'SF Mono','Fira Code',monospace}
+.rmap-rt{margin-top:8px;padding-top:8px;border-top:1px dashed var(--bd);font-size:12px;color:var(--t2)}
+.rmap-routes{margin-top:6px;padding-left:8px}
+.rmap-route{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px}
+.rmap-arrow{color:var(--t2)}
+.rmap-hl{color:var(--ac2)!important;font-weight:600}
+.rmap-conns{margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)}
+.rmap-conns-label{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:10px}
+.rmap-cg{display:flex;gap:10px;flex-wrap:wrap}
+.rmap-conn{background:var(--bg);border:1px solid;border-radius:8px;padding:10px 14px;text-align:center;min-width:90px}
+.rmap-ct{font-size:11px;font-weight:600;margin-top:4px}
+.rmap-ci{font-size:10px;color:var(--t2);margin-top:2px}
+@media(max-width:900px){.wrap{grid-template-columns:1fr}}
+.md-body{font-size:13px;line-height:1.7;color:var(--t1)}
+.md-body h2{font-size:16px;color:var(--ac2);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--bd)}
+.md-body h3{font-size:14px;color:var(--t1);margin:16px 0 6px}
+.md-body h4{font-size:13px;color:var(--t2);margin:12px 0 4px}
+.md-body table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+.md-body th{background:var(--bg);padding:8px 10px;text-align:left;border:1px solid var(--bd);color:var(--t2);font-weight:600}
+.md-body td{padding:8px 10px;border:1px solid var(--bd)}
+.md-body code{background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px;color:var(--ac2)}
+.md-body pre{background:var(--bg);padding:14px;border-radius:8px;overflow-x:auto;margin:10px 0}
+.md-body pre code{background:none;padding:0}
+.md-body ul,.md-body ol{padding-left:20px;margin:8px 0}
+.md-body li{margin:4px 0}
+.md-body strong{color:var(--t1)}
+.md-body hr{border:none;border-top:1px solid var(--bd);margin:16px 0}
+.md-body blockquote{border-left:3px solid var(--ac);padding-left:12px;color:var(--t2);margin:10px 0}
+</style>
+</head>
+<body>
+<div class="hdr"><div class="logo">⚡ NetOps<span>Network MCP Ticket Processor — AgentCore Runtime</span></div><div class="badge">DEMO</div></div>
+<div class="wrap">
+<div>
+<div class="pnl"><h2>📋 Create Ticket</h2>
+<label>Ticket Type</label>
+<select id="tType" onchange="uf()"><option value="">Select type...</option><option value="VPC_CONNECTIVITY">VPC Connectivity Check</option><option value="TGW_ROUTE_CHECK">Transit Gateway Route Check</option><option value="VPN_STATUS">VPN Status Check</option><option value="SUBNET_CHECK">Subnet Analysis</option><option value="SECURITY_GROUP_AUDIT">Security Group Audit</option></select>
+<label>Title</label><input id="tTitle" placeholder="Brief description...">
+<div id="df"></div>
+<button class="btn btn-p" onclick="ct()">Create Ticket</button>
+</div>
+<div class="pnl" style="margin-top:16px"><h2>📑 Tickets</h2>
+<div id="tl" class="tlist"><div class="empty" style="height:100px"><span style="font-size:13px">No tickets yet</span></div></div>
+</div></div>
+<div class="pnl rpnl"><h2>🔍 Ticket Detail & MCP Result</h2>
+<div class="fl"><span class="fs f1">ITSM Ticket</span><span class="fa">→</span><span class="fs f2">Lambda</span><span class="fa">→</span><span class="fs f3">AgentCore Runtime</span><span class="fa">→</span><span class="fs f3">Network MCP</span><span class="fa">→</span><span class="fs f1">Result</span></div>
+<div id="ra"><div class="empty"><div class="ic">🎯</div><div>Select a ticket or create one to see results</div></div></div>
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="app.js"></script>
+</body></html>
