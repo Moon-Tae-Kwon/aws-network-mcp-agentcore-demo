@@ -12,7 +12,13 @@ async function st(id){sel=id;rt();const r=await fetch(API+"/tickets/"+id),t=awai
 function parseMcp(res){try{const r=res.response||res;let result=r.result||r;if(typeof result==='string'){try{result=JSON.parse(result)}catch(e){return{_md:result}}}if(result.content){const text=result.content.find(c=>c.text)?.text;if(text)return{_md:text}}if(result.structuredContent?.result)return result.structuredContent.result;return res}catch(e){return res}}
 
 function renderResult(data){
-  if(data._md){return `<div class="md-body">${marked.parse(data._md)}</div>`}
+  if(data._md){
+    let html=marked.parse(data._md);
+    // Mermaid 코드블록 렌더링
+    html=html.replace(/<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,(m,code)=>`<div class="mermaid">${code.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')}</div>`);
+    setTimeout(()=>{try{mermaid.run({querySelector:'.mermaid'})}catch(e){}},100);
+    return `<div class="md-body">${html}</div>`;
+  }
   if(data.vpc)return renderResourceMap(data);
   return renderRaw(data);
 }
